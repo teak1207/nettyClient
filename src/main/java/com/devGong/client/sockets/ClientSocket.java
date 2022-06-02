@@ -19,7 +19,10 @@ public class ClientSocket {
 
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < messageLength; i++)
-            stringBuilder.append("A");
+            stringBuilder.append("B");
+            stringBuilder.append("a");
+//            stringBuilder.append("C");
+//            stringBuilder.append("D");
         byte[] totalData = stringBuilder.toString().getBytes();
 
         System.out.println("Sending message");
@@ -46,6 +49,9 @@ public class ClientSocket {
             ByteStreams.read(is, reply, 0, reply.length);
 
             System.out.println(new String(reply));
+            // 여기
+
+
         }
         catch (IOException e) {
             e.printStackTrace();
