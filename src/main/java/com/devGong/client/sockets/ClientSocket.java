@@ -22,15 +22,6 @@ public class ClientSocket {
         int key;
 
         StringBuilder stringBuilder = new StringBuilder();
-        /*
-        for (int i = 0; i < messageLength; i++) {
-
-
-            stringBuilder.append("B");
-            stringBuilder.append("A");
-        }
-        */
-
 
         do {
             System.out.println("0: PRE-INSTALL / 1:SETTING / 2:REQUEST / 3:REPORT / 4:DATA ");
@@ -39,7 +30,7 @@ public class ClientSocket {
             switch (key) {
 
                 case 0:
-                    System.out.println("PRE-INSTALL selected ");
+                    System.out.println("PRE-INSTALL selected");
                     for (int i = 0; i < messageLength; i++) {
                         stringBuilder.append("000000000000000");
                         stringBuilder.append("00NONE");
@@ -56,7 +47,6 @@ public class ClientSocket {
                         stringBuilder.append("e1");
                     }
                     break;
-
                 case 2:
                     System.out.println("REQUEST selected ");
                     for (int i = 0; i < messageLength; i++) {
@@ -67,7 +57,6 @@ public class ClientSocket {
                         stringBuilder.append("e2");
                     }
                     break;
-
                 case 3:
                     System.out.println("REPORT selected ");
                     for (int i = 0; i < messageLength; i++) {
@@ -78,7 +67,6 @@ public class ClientSocket {
                         stringBuilder.append("e3");
                     }
                     break;
-
                 case 4:
                     System.out.println("DATA selected ");
                     for (int i = 0; i < messageLength; i++) {
@@ -105,9 +93,10 @@ public class ClientSocket {
 
             for (int i = 0; i < messageLength / delimiterLength; i++) {
                 byte[] sending = Arrays.copyOfRange(totalData, i * delimiterLength, (i + 1) * delimiterLength);
+                //               Arrays.copyOfRange(원본 배열, 복사할 시작인덱스, 복사할 끝인덱스) 인덱스는 0부터 시작하는것 기준
                 System.out.println("sending... " + (i + 1));
-                os.write(sending);
-                os.flush();
+                os.write(sending); //write( byte[] sending ) 매개값으로 주어진 바이트 배열의 모든 바이트를 출력 스트림으로 보냅니다
+                os.flush(); // flush()는 버퍼에 남아있는 데이터를 모두 출력시키고, 버퍼를 비우는 역할을 합니다.
                 Thread.sleep(500);
             }
         } catch (InterruptedException | IOException e) {
@@ -127,7 +116,7 @@ public class ClientSocket {
 
             String converted = new String(test);
             System.out.println(converted);
-//            System.out.println(new String(reply));
+            System.out.println(new String(reply));
 
 
         } catch (IOException e) {

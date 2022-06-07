@@ -14,7 +14,9 @@ public class ClientSocketApplication {
         int port = 9999;
         try {
             System.out.println("Enter message length: ");
+
             Scanner sc = new Scanner(System.in);
+
             int messageLength = Integer.parseInt(sc.nextLine());
 
             NonSslSocket socket = new NonSslSocket(host, port);
