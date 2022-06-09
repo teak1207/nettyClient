@@ -10,7 +10,7 @@ import java.net.SocketAddress;
 public class NonSslSocket{
     private String host;
     private int port;
-
+    // 길이 + 주소 + 포트번혼
     public void run(int messageLength) {
         try {
             Socket socket = new Socket();

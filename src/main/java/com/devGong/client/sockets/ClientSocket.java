@@ -16,17 +16,13 @@ public class ClientSocket {
     private Socket socket;
     static Scanner scanner = new Scanner(System.in);
 
-
     public void sendFixedLength(int messageLength) {
         int delimiterLength = 256;
         int key;
 
         StringBuilder stringBuilder = new StringBuilder();
         /* PRE-INSTALL(31byte) / SETTING / 2:REQUEST / 3:REPORT(141byte) / 4:DATA
-
-
          */
-
         do {
             System.out.println("Input => 0: PRE-INSTALL(31byte) / 1:SETTING / 2:REQUEST / 3:REPORT / 4:DATA / 8: ACK / 9: NAK  ");
             key = scanner.nextInt();
@@ -36,11 +32,20 @@ public class ClientSocket {
                 case 0:
                     System.out.println("PRE-INSTALL selected");
                     for (int i = 0; i < messageLength; i++) {
-                        stringBuilder.append("flag");
-                        stringBuilder.append("000000000000000");
-                        stringBuilder.append("00NONE");
-                        stringBuilder.append("yyyymmddhhmmss");
-                        stringBuilder.append("0xFFFF");
+                    /*===HEADER=======================================================*/
+                        stringBuilder.append("A"); //flag
+                        stringBuilder.append("000000000000000000000000"); //modem number
+                        stringBuilder.append("20200101 000014"); //date time
+                        stringBuilder.append("0x00"); //para_len
+                        stringBuilder.append("0x00"); //para_len
+                        stringBuilder.append("0x00"); //para_len
+                        stringBuilder.append("0x1f"); //para_len
+                    /*===REQUEST=====================================================*/
+                        stringBuilder.append("8212-3294-5260"); //Modem Number
+                        stringBuilder.append("255 NONE"); //debug message
+                        stringBuilder.append("0cc1"); //check sum
+
+
                     }
                     break;
                 case 1:
@@ -142,7 +147,7 @@ public class ClientSocket {
                 os.flush(); // flush()는 버퍼에 남아있는 데이터를 모두 출력시키고, 버퍼를 비우는 역할을 합니다.
                 Thread.sleep(500);
             }*/
-            byte[] sending = Arrays.copyOf(totalData, messageLength);
+            byte[] sending = Arrays.copyOf(totalData, messageLength);  ///
             //byte[] sending = totalData ;
 
             os.write(sending); //write( byte[] sending ) 매개값으로 주어진 바이트 배열의 모든 바이트를 출력 스트림으로 보냅니다
