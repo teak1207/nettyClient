@@ -33,16 +33,19 @@ public class ClientSocket {
                     System.out.println("PRE-INSTALL selected");
                     for (int i = 0; i < messageLength; i++) {
                     /*===HEADER=======================================================*/
-                        stringBuilder.append("A"); //flag
-                        stringBuilder.append("000000000000000000000000"); //modem number
-                        stringBuilder.append("20200101 000014"); //date time
-                        stringBuilder.append("0x00"); //para_len
-                        stringBuilder.append("0x00"); //para_len
-                        stringBuilder.append("0x00"); //para_len
-                        stringBuilder.append("0x1f"); //para_len
+                        stringBuilder.append("0"); //Flag
+                        stringBuilder.append("000000000000000000000000"); // SerialNumber
+                        stringBuilder.append("20200101 000014"); //DateTime
+                        stringBuilder.append("00ff"); //paraLen
                     /*===REQUEST=====================================================*/
-                        stringBuilder.append("8212-3294-5260"); //Modem Number
-                        stringBuilder.append("255 NONE"); //debug message
+                        stringBuilder.append("821203294052600"); //Modem(phone ,기존) Number=> 15자리
+                        stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음
+                        /*
+                        * 00 : NONE
+                            11 : F-RESET
+                            12 : PREINSTALL NO RESPONSE
+                            13 : PREINSTALL NAK
+                         */
                         stringBuilder.append("0cc1"); //check sum
 
 
