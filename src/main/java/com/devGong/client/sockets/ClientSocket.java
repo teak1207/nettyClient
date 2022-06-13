@@ -24,11 +24,10 @@ public class ClientSocket {
         /* PRE-INSTALL(31byte) / SETTING / 2:REQUEST / 3:REPORT(141byte) / 4:DATA
          */
         do {
-            System.out.println("Input => 0: PRE-INSTALL(31byte) / 1:SETTING / 2:REQUEST / 3:REPORT / 4:DATA / 8: ACK / 9: NAK  ");
+            System.out.println("Input => 0: PRE-INSTALL(31byte) / 1:SETTING / 2:REPORT / 3:REQUEST / 4:DATA / 8: ACK / 9: NAK");
             key = scanner.nextInt();
 
             switch (key) {
-
                 case 0:
                     System.out.println("PRE-INSTALL selected");
                     for (int i = 0; i < messageLength; i++) {
@@ -40,29 +39,28 @@ public class ClientSocket {
                     /*===REQUEST=====================================================*/
                         stringBuilder.append("821203294052600"); //Modem(phone ,기존) Number=> 15자리
                         stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음
+                        stringBuilder.append("0cc2"); //check sum
                         /*
                         * 00 : NONE
                             11 : F-RESET
                             12 : PREINSTALL NO RESPONSE
                             13 : PREINSTALL NAK
                          */
-                        stringBuilder.append("0cc1"); //check sum
-
-
                     }
                     break;
                 case 1:
                     System.out.println("SETTING selected ");
                     for (int i = 0; i < messageLength; i++) {
-                        stringBuilder.append("RecordingTime1");
-                        stringBuilder.append("RecordingTime2");
-                        stringBuilder.append("RecordingTime3");
-                        stringBuilder.append("S/N");
-                        stringBuilder.append("period");
-                        stringBuilder.append("SamplingTime");
-                        stringBuilder.append("ServreURL");
-                        stringBuilder.append("ServerPort");
-                        stringBuilder.append("CheckSum");
+                        /*===HEADER=======================================================*/
+                        stringBuilder.append("0"); //Flag
+                        stringBuilder.append("000000000000000000000000"); // SerialNumber
+                        stringBuilder.append("20200101 000014"); //DateTime
+                        stringBuilder.append("00ff"); //paraLen
+                        /*===REQUEST=====================================================*/
+                        stringBuilder.append("821203294052600"); //Modem(phone ,기존) Number=> 15자리
+                        stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음
+                        stringBuilder.append("0cc2"); //check sum
+
                     }
                     break;
                 case 2:
