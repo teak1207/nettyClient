@@ -32,14 +32,14 @@ public class ClientSocket {
                     System.out.println("PRE-INSTALL selected");
                     for (int i = 0; i < messageLength; i++) {
                     /*===HEADER=======================================================*/
-                        stringBuilder.append("0"); //Flag
+                        stringBuilder.append("A"); //Flag
                         stringBuilder.append("000000000000000000000000"); // SerialNumber
                         stringBuilder.append("20200101 000014"); //DateTime
                         stringBuilder.append("00ff"); //paraLen
                     /*===REQUEST=====================================================*/
                         stringBuilder.append("821203294052600"); //Modem(phone ,기존) Number=> 15자리
                         stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음
-                        stringBuilder.append("0cc2"); //check sum
+                        stringBuilder.append("AAAA"); //check sum
                         /*
                         * 00 : NONE
                             11 : F-RESET
