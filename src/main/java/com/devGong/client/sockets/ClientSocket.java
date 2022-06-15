@@ -33,12 +33,13 @@ public class ClientSocket {
                     for (int i = 0; i < messageLength; i++) {
                     /*===HEADER=======================================================*/
                         stringBuilder.append("A"); //Flag
-                        stringBuilder.append("000000000000000000000000"); // SerialNumber
+                        stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber
                         stringBuilder.append("20200101 000014"); //DateTime
                         stringBuilder.append("00ff"); //paraLen
                     /*===REQUEST=====================================================*/
-                        stringBuilder.append("821203294052600"); //Modem(phone ,기존) Number=> 15자리
-                        stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음
+                        stringBuilder.append("8212-3266-1739"); //Modem(phone ,기존) Number=> 15자리
+//                        stringBuilder.append("821203294052600"); //Modem(phone ,기존) Number=> 15자리
+                        stringBuilder.append("00"); //ddaegufebug message,  변동사항 거의 있을수 있음leakset_by
                         stringBuilder.append("AAAA"); //check sum
                         /*
                         * 00 : NONE
