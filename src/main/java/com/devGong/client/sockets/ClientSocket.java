@@ -14,129 +14,42 @@ import java.util.Scanner;
 @AllArgsConstructor
 public class ClientSocket {
     private Socket socket;
-    static Scanner scanner = new Scanner(System.in);
+    static Scanner sc = new Scanner(System.in);
 
     public void sendFixedLength(int messageLength) {
         int delimiterLength = 256;
         int key;
 
         StringBuilder stringBuilder = new StringBuilder();
-        /* PRE-INSTALL(31byte) / SETTING / 2:REQUEST / 3:REPORT(141byte) / 4:DATA
-         */
+        /* PRE-INSTALL(31byte) / SETTING / 2:REQUEST / 3:REPORT(141byte) / 4:DATA  */
         do {
             System.out.println("Input => 0: PRE-INSTALL(31byte) / 1:SETTING / 2:REPORT / 3:REQUEST / 4:DATA / 8: ACK / 9: NAK");
-            key = scanner.nextInt();
+            key = sc.nextInt();
 
             switch (key) {
                 case 0:
                     System.out.println("PRE-INSTALL selected");
                     for (int i = 0; i < messageLength; i++) {
-                    /*===HEADER=======================================================*/
+                        /*===HEADER=======================================================*/
                         stringBuilder.append("A"); //Flag
                         stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber
                         stringBuilder.append("20200101 000014"); //DateTime
                         stringBuilder.append("00ff"); //paraLen
-                    /*===REQUEST=====================================================*/
+                        /*===REQUEST=====================================================*/
                         stringBuilder.append("862785043595621"); //Modem(phone ,기존) Number=> 15자리
-//                        stringBuilder.append("821203294052600"); //Modem(phone ,기존) Number=> 15자리
                         stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음.
                         stringBuilder.append("AAAA"); //check sum
                         /*
-                        * 00 : NONE
-                            11 : F-RESET
-                            12 : PREINSTALL NO RESPONSE
-                            13 : PREINSTALL NAK
+                         * 00 : NONE | 11 : F-RESET | 12 : PREINSTALL NO RESPONSE | 13 : PREINSTALL NAK
                          */
-                    }
-                    break;
-                case 1:
-                    System.out.println("SETTING selected ");
-                    for (int i = 0; i < messageLength; i++) {
-                        /*===HEADER=======================================================*/
-                        stringBuilder.append("0"); //Flag
-                        stringBuilder.append("000000000000000000000000"); // SerialNumber
-                        stringBuilder.append("20200101 000014"); //DateTime
-                        stringBuilder.append("00ff"); //paraLen
-                        /*===REQUEST=====================================================*/
-                        stringBuilder.append("862785043595621"); //Modem(phone ,기존) Number=> 15자리
-                        stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음
-                        stringBuilder.append("0cc2"); //check sum
-
-                    }
-                    break;
-                case 2:
-                    System.out.println("REQUEST selected ");
-                    for (int i = 0; i < messageLength; i++) {
-                        stringBuilder.append("DebugMessage");
-                        stringBuilder.append("RecordingTime1");
-                        stringBuilder.append("RecordingTime2");
-                        stringBuilder.append("RecordingTime3");
-                        stringBuilder.append("FirmwareVersion");
-                        stringBuilder.append("BatteryVoltage");
-                        stringBuilder.append("ModernRSSI");
-                        stringBuilder.append("Project");
-                        stringBuilder.append("SID");
-                        stringBuilder.append("Period");
-                        stringBuilder.append("ServerURL");
-                        stringBuilder.append("ServerPort");
-                        stringBuilder.append("CheckSUM");
-
-                    }
-                    break;
-                case 3:
-                    System.out.println("REPORT selected ");
-                    for (int i = 0; i < messageLength; i++) {
-                        stringBuilder.append("RecordingTime1");
-                        stringBuilder.append("RecordingTime2");
-                        stringBuilder.append("RecordingTime3");
-                        stringBuilder.append("Sleep");
-                        stringBuilder.append("Period");
-                        stringBuilder.append("SamplingTime");
-                        stringBuilder.append("F-reset");
-                        stringBuilder.append("Px");
-                        stringBuilder.append("Py");
-                        stringBuilder.append("Active");
-                        stringBuilder.append("SampleRate");
-                        stringBuilder.append("ServerURL");
-                        stringBuilder.append("ServerPort");
-                        stringBuilder.append("CheckSUM");
-                    }
-                    break;
-                case 4:
-                    System.out.println("DATA selected ");
-                    for (int i = 0; i < messageLength; i++) {
-                        stringBuilder.append("EndRecordTime");
-                        stringBuilder.append("RecordingTime1");
-                        stringBuilder.append("RecordingTime2");
-                        stringBuilder.append("RecordingTime3");
-                        stringBuilder.append("FirmwareVersion");
-                        stringBuilder.append("BatteryVoltage");
-                        stringBuilder.append("ModernRSSI");
-                        stringBuilder.append("DeviceStatus");
-                        stringBuilder.append("SamplingTime");
-                        stringBuilder.append("Px");
-                        stringBuilder.append("Py");
-                        stringBuilder.append("Period");
-                        stringBuilder.append("ServerURL");
-                        stringBuilder.append("ServerPort");
-                        stringBuilder.append("Sleep");
-                        stringBuilder.append("Active");
-                        stringBuilder.append("F-reset");
-                        stringBuilder.append("SampleRate");
-                        stringBuilder.append("CregCount");
-                        stringBuilder.append("CheckSum");
                     }
                     break;
             }
 
         }
         while (key >= 10);
-        System.out.println("종료");
-
-
+        System.out.println("조건에 해당 안 될 경우, 종료");
         byte[] totalData = stringBuilder.toString().getBytes();
-
-//        System.out.println("<<<Sending message>>>");
 
         try {
             OutputStream os = socket.getOutputStream();
