@@ -48,13 +48,18 @@ public class ClientSocket {
 
         }
         while (key >= 10);
-        System.out.println("조건에 해당 안 될 경우, 종료");
+        System.out.println("<< if key >= 10, exit >> ");
         byte[] totalData = stringBuilder.toString().getBytes();
 
         try {
             OutputStream os = socket.getOutputStream();
+            byte[] sending = Arrays.copyOf(totalData, messageLength);  ///
+            //byte[] sending = totalData ;
 
-         /*   for (int i = 0; i < messageLength / delimiterLength; i++) {  //delimiterLength = 256
+            os.write(sending); //write( byte[] sending ) 매개값으로 주어진 바이트 배열의 모든 바이트를 출력 스트림으로 보냅니다
+            os.flush(); // flush()는 버퍼에 남아있는 데이터를 모두 출력시키고, 버퍼를 비우는 역할을 합니다.
+            Thread.sleep(500);
+            /*   for (int i = 0; i < messageLength / delimiterLength; i++) {  //delimiterLength = 256
                 byte[] sending = Arrays.copyOfRange(totalData, i * delimiterLength, (i + 1) * delimiterLength);
                 //               Arrays.copyOfRange(원본 배열, 복사할 시작인덱스, 복사할 끝인덱스) 인덱스는 0부터 시작하는것 기준
                 System.out.println("sending... " + (i + 1));
@@ -62,13 +67,6 @@ public class ClientSocket {
                 os.flush(); // flush()는 버퍼에 남아있는 데이터를 모두 출력시키고, 버퍼를 비우는 역할을 합니다.
                 Thread.sleep(500);
             }*/
-            byte[] sending = Arrays.copyOf(totalData, messageLength);  ///
-            //byte[] sending = totalData ;
-
-            os.write(sending); //write( byte[] sending ) 매개값으로 주어진 바이트 배열의 모든 바이트를 출력 스트림으로 보냅니다
-            os.flush(); // flush()는 버퍼에 남아있는 데이터를 모두 출력시키고, 버퍼를 비우는 역할을 합니다.
-            Thread.sleep(500);
-
 
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
@@ -76,6 +74,8 @@ public class ClientSocket {
 
         System.out.println("Receiving message");
         try {
+
+            // Client -> Server로 전달됐던 값을
             InputStream is = socket.getInputStream();
 
             byte[] reply = new byte[messageLength];
@@ -86,8 +86,8 @@ public class ClientSocket {
             System.arraycopy(totalData, 0, test, 0, 42);
 
             String converted = new String(test);
-            System.out.println(converted);
-            System.out.println(new String(reply));
+//            System.out.println("&&&"+converted);
+            System.out.println("<<Send>>" + new String(reply));
 
 
         } catch (IOException e) {
