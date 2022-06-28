@@ -11,14 +11,14 @@ public class NonSslSocket{
     private String host;
     private int port;
     // 길이 + 주소 + 포트번혼
-    public void run(int messageLength) {
+    public void run() {
         try {
             Socket socket = new Socket();
             SocketAddress address = new InetSocketAddress(host, port);
             socket.connect(address);
 
             ClientSocket clientSocket = new ClientSocket(socket);
-            clientSocket.sendFixedLength(messageLength);
+            clientSocket.sendFixedLength();
         } catch (IOException e) {
             e.printStackTrace();
         }

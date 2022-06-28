@@ -1,12 +1,12 @@
 package com.devGong.client.sockets;
 
-import com.google.common.io.ByteStreams;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -16,12 +16,13 @@ public class ClientSocket {
     private Socket socket;
     static Scanner sc = new Scanner(System.in);
 
-    public void sendFixedLength(int messageLength) {
+    public void sendFixedLength() {
         int delimiterLength = 256;
         int key;
 
         StringBuilder stringBuilder = new StringBuilder();
         /* PRE-INSTALL(31byte) / SETTING / 2:REQUEST / 3:REPORT(141byte) / 4:DATA  */
+        /* 26번 라인 do 구문 삭제예정*/
         do {
             System.out.println("Input => 0: PRE-INSTALL(31byte) / 1:SETTING / 2:REPORT / 3:REQUEST / 4:DATA / 8: ACK / 9: NAK");
             key = sc.nextInt();
@@ -29,65 +30,86 @@ public class ClientSocket {
             switch (key) {
                 case 0:
                     System.out.println("PRE-INSTALL selected");
-                    for (int i = 0; i < messageLength; i++) {
-                        /*===HEADER=======================================================*/
-                        stringBuilder.append("A"); //Flag
-                        stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber
-                        stringBuilder.append("20200101 000014"); //DateTime
-                        stringBuilder.append("00ff"); //paraLen
-                        /*===REQUEST=====================================================*/
-                        stringBuilder.append("862785043595621"); //Modem(phone ,기존) Number=> 15자리
-                        stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음.
-                        stringBuilder.append("AAAA"); //check sum
-                        /*
-                         * 00 : NONE | 11 : F-RESET | 12 : PREINSTALL NO RESPONSE | 13 : PREINSTALL NAK
-                         */
-                    }
-                    break;
+                    stringBuilder.append("0"); //Flag 1
+                    stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber  24
+                    stringBuilder.append("20200101 000014"); //DateTime  15
+                    stringBuilder.append("00"); //paraLen  2
+                    stringBuilder.append("862785043595621"); //Modem(phone ,기존) Number=> 15자리
+                    stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음. 2
+                    stringBuilder.append("AAAA"); //check sum 2
             }
+            break;
+
 
         }
         while (key >= 10);
-        System.out.println("<< if key >= 10, exit >> ");
-        byte[] totalData = stringBuilder.toString().getBytes();
 
+        byte[] totalData = stringBuilder.toString().getBytes();
         try {
             OutputStream os = socket.getOutputStream();
-            byte[] sending = Arrays.copyOf(totalData, messageLength);  ///
-            //byte[] sending = totalData ;
 
-            os.write(sending); //write( byte[] sending ) 매개값으로 주어진 바이트 배열의 모든 바이트를 출력 스트림으로 보냅니다
-            os.flush(); // flush()는 버퍼에 남아있는 데이터를 모두 출력시키고, 버퍼를 비우는 역할을 합니다.
+            os.write(totalData);
+            os.flush();
             Thread.sleep(500);
-            /*   for (int i = 0; i < messageLength / delimiterLength; i++) {  //delimiterLength = 256
-                byte[] sending = Arrays.copyOfRange(totalData, i * delimiterLength, (i + 1) * delimiterLength);
-                //               Arrays.copyOfRange(원본 배열, 복사할 시작인덱스, 복사할 끝인덱스) 인덱스는 0부터 시작하는것 기준
-                System.out.println("sending... " + (i + 1));
-                os.write(sending); //write( byte[] sending ) 매개값으로 주어진 바이트 배열의 모든 바이트를 출력 스트림으로 보냅니다
-                os.flush(); // flush()는 버퍼에 남아있는 데이터를 모두 출력시키고, 버퍼를 비우는 역할을 합니다.
-                Thread.sleep(500);
-            }*/
 
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
 
         System.out.println("Receiving message");
+
+
         try {
-
-            // Client -> Server로 전달됐던 값을
             InputStream is = socket.getInputStream();
+            byte[] reply = new byte[50];
+            if (is.read(reply) < 0)
+                throw new SocketException();
 
-            byte[] reply = new byte[messageLength];
-            byte[] test = new byte[messageLength];
-            ByteStreams.read(is, reply, 0, reply.length);
+            System.out.println("<<Send>>     " + new String(reply));
+            /*
+            1. reply가 맞는 값이 왔다면
+            2. ACK or NAK 와 report 값을 서버에 보내줌!
+            */
 
-            //totalData 배열 0번지 위치부터 read 길이까지 two 배열에 0 번부터 저장하겠다
-            System.arraycopy(totalData, 0, test, 0, 42);
+            Arrays.fill(totalData, (byte) 0);  //  pre-install 값 담긴 바이트배열 초기화
 
-            String converted = new String(test);
-//            System.out.println("&&&"+converted);
-            System.out.println("<<Send>>" + new String(reply));
+            OutputStream os = socket.getOutputStream();
+
+            stringBuilder.setLength(0); // stringBuilder를 초기화
+
+            System.out.println("=== REPORT SEND ===");
+
+            /*============ Header ============*/
+            stringBuilder.append("2");  // Flag
+            stringBuilder.append("SWSLB-20220530-0000-0001");  // SerialNum
+            stringBuilder.append("20200101 000014");  // DataTime
+            stringBuilder.append("00");  // paraLen
+            /*============ Body ============*/
+            stringBuilder.append("2");   // DebugMessage
+            stringBuilder.append("0200");   // RecordingTime1
+            stringBuilder.append("0300");   // RecordingTime2
+            stringBuilder.append("0400");   // RecordingTime3
+            stringBuilder.append("L7.300");   // Firmware Version
+            stringBuilder.append("3.5900");   // Battery Voltage
+            stringBuilder.append("0x5b");   // Modem RSSI
+            stringBuilder.append("0x03");   // Sampling Time
+            stringBuilder.append("4");   // SampleRate
+            stringBuilder.append("862785043595621");   // Modem Number
+            stringBuilder.append("test_hkchoi");   // Project
+            stringBuilder.append("producttest");   // SID
+            stringBuilder.append("60");   // Period
+            stringBuilder.append("thingsware.co.kr");   // Server URL
+            stringBuilder.append("6669");   // Server Port
+            stringBuilder.append("274a");   // CheckSum
+
+            totalData = stringBuilder.toString().getBytes();
+
+//            System.out.println(" Report value -->" + new String(totalData));
+
+                /*
+                    os.write(totalData);
+                    os.flush();
+                */
 
 
         } catch (IOException e) {
