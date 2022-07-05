@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -14,10 +15,10 @@ import java.util.Scanner;
 @AllArgsConstructor
 public class ClientSocket {
     private Socket socket;
+
     static Scanner sc = new Scanner(System.in);
 
     public void sendFixedLength() {
-        int delimiterLength = 256;
         int key;
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -51,52 +52,62 @@ public class ClientSocket {
         }
 
         System.out.println("Receiving message");
-
-
         try {
             InputStream is = socket.getInputStream();
-            byte[] reply = new byte[50];
+            byte[] reply = new byte[100];
+
             if (is.read(reply) < 0)
+
                 throw new SocketException();
-            System.out.println("<<receive preinstall>> " + new String(reply));
+
+            System.out.println(" [Receive preinstall INFO] : " + new String(reply));
 
 
-            /*
-            1. reply가 맞는 값이 왔다면
-            2. ACK or NAK 와 report 값을 서버에 보내줌!
-            */
+            /* reply가 맞는 값이 왔다면 ACK or NAK 와 report 값을 서버에 보내줌! */
 
-            OutputStream os = socket.getOutputStream();
-            System.out.println("=== REPORT PROCESS ===");
+            OutputStream os;
+            System.out.println("=== [ REPORT PROCESS ] ===");
 
-            if (reply != null) {
+            // reply에서 플래그값을 받아야함
+
+
+
+            if (reply != null) {    // 서버에서 날라온 값이 or NAK
                 /*============ 저장공간 리셋 ========*/
                 Arrays.fill(totalData, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
-                stringBuilder.setLength(0); // stringBuilder를 초기화
+                stringBuilder.setLength(0); // stringBuilder를 초기화.
+
+//                System.out.println(Arrays.toString(totalData));
                 /*============ Header ============*/
-                stringBuilder.append("2");  // Flag
-                stringBuilder.append("SWSLB-20220530-0000-0001");  // SerialNum
-                stringBuilder.append("20200101 000014");  // DataTime
-                stringBuilder.append("00");  // paraLen
+                stringBuilder.append("8");  // Flag 1
+                stringBuilder.append("SWSLB-20220530-0000-8888");  // SerialNum 24
+                stringBuilder.append("20200101 000014");  // DateTime    15
+
+                stringBuilder.append("00");  // paraLen 2
                 /*============ Body ============*/
-                stringBuilder.append("2");   // DebugMessage
-                stringBuilder.append("0200");   // RecordingTime1
-                stringBuilder.append("0300");   // RecordingTime2
-                stringBuilder.append("0400");   // RecordingTime3
-                stringBuilder.append("L7.300");   // Firmware Version
-                stringBuilder.append("3.5900");   // Battery Voltage
-                stringBuilder.append("0x5b");   // Modem RSSI
-                stringBuilder.append("0x03");   // Sampling Time
-                stringBuilder.append("4");   // SampleRate
-                stringBuilder.append("862785043595621");   // Modem Number
-                stringBuilder.append("test_hkchoi");   // Project
-                stringBuilder.append("producttest");   // SID
-                stringBuilder.append("60");   // Period
-                stringBuilder.append("thingsware.co.kr");   // Server URL
-                stringBuilder.append("6669");   // Server Port
-                stringBuilder.append("274a");   // CheckSum
+                stringBuilder.append("00");   // DebugMessage    2
+
+                stringBuilder.append("0200");   // RecordingTime1   4
+                stringBuilder.append("0300");   // RecordingTime2   4
+                stringBuilder.append("0400");   // RecordingTime3   4
+
+                stringBuilder.append("L7.300");   // Firmware Version   6
+                stringBuilder.append("3.590");   // Battery Voltage    5
+
+                stringBuilder.append("1");   // Modem RSSI   1
+                stringBuilder.append("3");   // Sampling Time    1
+                stringBuilder.append("4");   // SampleRate  1
+                stringBuilder.append("862785043595621");   // Modem Number  15
+                stringBuilder.append("test_hkchoi000000000000000000000");   // Project   32
+                stringBuilder.append("producttest00000");   // SID   16
+                stringBuilder.append(5);   // Period 1
+                stringBuilder.append("thingsware.co.kr0000000000000000");   // Server URL   32
+                stringBuilder.append("6669");   // Server Port  4
+                stringBuilder.append("274a");   // CheckSum 2
 
                 totalData = stringBuilder.toString().getBytes();
+                String converted = new String(totalData, StandardCharsets.UTF_8); //byte[] -> String 변환
+                System.out.println("[ 보낼 REPORT INFO ] : " + converted);
 
                 try {
                     os = socket.getOutputStream();
@@ -107,7 +118,6 @@ public class ClientSocket {
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
                 }
-
 
             } else {
                 /*============ 저장공간 리셋 ========*/
@@ -120,7 +130,7 @@ public class ClientSocket {
                 stringBuilder.append("20200101 000014");  // DataTime
                 stringBuilder.append("00");  // paraLen
                 /*============ Body ============*/
-                stringBuilder.append("2");   // DebugMessage
+                stringBuilder.append("00");   // DebugMessage
                 stringBuilder.append("0200");   // RecordingTime1
                 stringBuilder.append("0300");   // RecordingTime2
                 stringBuilder.append("0400");   // RecordingTime3
@@ -138,7 +148,6 @@ public class ClientSocket {
                 stringBuilder.append("274a");   // CheckSum
 
                 totalData = stringBuilder.toString().getBytes();
-
                 try {
                     os = socket.getOutputStream();
                     os.write(totalData);
