@@ -29,7 +29,8 @@ public class ClientSocket {
 
         switch (key) {
             case 0:
-                System.out.println("PRE-INSTALL selected");
+                System.out.println("=== [ PREINSTALL PROCESS START ] ===");
+
                 stringBuilder.append("0"); //Flag 1
                 stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber  24
                 stringBuilder.append("20200101 000014"); //DateTime  15
@@ -51,7 +52,7 @@ public class ClientSocket {
             e.printStackTrace();
         }
 
-        System.out.println("Receiving message");
+        System.out.println("[ PreInstall Receiving message ]");
         try {
             InputStream is = socket.getInputStream();
             byte[] reply = new byte[100];
@@ -66,45 +67,34 @@ public class ClientSocket {
             /* reply가 맞는 값이 왔다면 ACK or NAK 와 report 값을 서버에 보내줌! */
 
             OutputStream os;
-            System.out.println("=== [ REPORT PROCESS ] ===");
+            System.out.println("=== [ REPORT PROCESS START ] ===");
 
-            // reply에서 플래그값을 받아야함
-
-
-
-            if (reply != null) {    // 서버에서 날라온 값이 or NAK
+            if (reply != null) {    // 서버에서 날라온 값이 있을 경우, ACK을 Flag로 가져감.
                 /*============ 저장공간 리셋 ========*/
                 Arrays.fill(totalData, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
                 stringBuilder.setLength(0); // stringBuilder를 초기화.
-
-//                System.out.println(Arrays.toString(totalData));
                 /*============ Header ============*/
-                stringBuilder.append("8");  // Flag 1
-                stringBuilder.append("SWSLB-20220530-0000-8888");  // SerialNum 24
-                stringBuilder.append("20200101 000014");  // DateTime    15
-
-                stringBuilder.append("00");  // paraLen 2
+                stringBuilder.append("8");  // Flag
+                stringBuilder.append("SWSLB-20220530-0000-8888");  // SerialNum
+                stringBuilder.append("20200101 000014");  // DateTime
+                stringBuilder.append("00");  // paraLen
                 /*============ Body ============*/
-                stringBuilder.append("00");   // DebugMessage    2
-
-                stringBuilder.append("0200");   // RecordingTime1   4
-                stringBuilder.append("0300");   // RecordingTime2   4
-                stringBuilder.append("0400");   // RecordingTime3   4
-
-                stringBuilder.append("L7.300");   // Firmware Version   6
-                stringBuilder.append("3.590");   // Battery Voltage    5
-
-                stringBuilder.append("1");   // Modem RSSI   1
-                stringBuilder.append("3");   // Sampling Time    1
-                stringBuilder.append("4");   // SampleRate  1
-                stringBuilder.append("862785043595621");   // Modem Number  15
-                stringBuilder.append("test_hkchoi000000000000000000000");   // Project   32
-                stringBuilder.append("producttest00000");   // SID   16
+                stringBuilder.append("00");   // DebugMessage
+                stringBuilder.append("0200");   // RecordingTime1
+                stringBuilder.append("0300");   // RecordingTime2
+                stringBuilder.append("0400");   // RecordingTime3
+                stringBuilder.append("L7.300");   // Firmware Version
+                stringBuilder.append("3.590");   // Battery Voltage
+                stringBuilder.append("1");   // Modem RSSI
+                stringBuilder.append("3");   // Sampling Time
+                stringBuilder.append("4");   // SampleRate
+                stringBuilder.append("862785043595621");   // Modem Number
+                stringBuilder.append("test_hkchoi000000000000000000000");   // Project, 32바이트가 안되도 펌웨어에서 채워서 보내준다함.
+                stringBuilder.append("producttest00000");   // SID
                 stringBuilder.append(5);   // Period 1
                 stringBuilder.append("thingsware.co.kr0000000000000000");   // Server URL   32
                 stringBuilder.append("6669");   // Server Port  4
                 stringBuilder.append("274a");   // CheckSum 2
-
                 totalData = stringBuilder.toString().getBytes();
                 String converted = new String(totalData, StandardCharsets.UTF_8); //byte[] -> String 변환
                 System.out.println("[ 보낼 REPORT INFO ] : " + converted);
@@ -114,12 +104,17 @@ public class ClientSocket {
                     os.write(totalData);
                     os.flush();
                     Thread.sleep(500);
-
+                    //보내고 reply를 초기화시키고 거기다가 report result를 받아야함
+                    //Arrays.fill(reply, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
+                    stringBuilder.setLength(0); // stringBuilder를 초기화.
+                    String result = new String(reply);
+                    System.out.println("[result] : " + result);
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
                 }
 
             } else {
+                // 서버에서 날라온 값이 없을 경우, NAK(9)을 Flag로 가져감.
                 /*============ 저장공간 리셋 ========*/
                 Arrays.fill(totalData, (byte) 0);  //  pre-install 값 담긴 바이트배열  0으로 초기화.
                 stringBuilder.setLength(0); // stringBuilder를 초기화
