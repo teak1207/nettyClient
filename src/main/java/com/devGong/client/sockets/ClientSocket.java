@@ -56,7 +56,6 @@ public class ClientSocket {
         try {
             InputStream is = socket.getInputStream();
             byte[] reply = new byte[100];
-
             if (is.read(reply) < 0)
 
                 throw new SocketException();
@@ -75,7 +74,7 @@ public class ClientSocket {
                 stringBuilder.setLength(0); // stringBuilder를 초기화.
                 /*============ Header ============*/
                 stringBuilder.append("8");  // Flag
-                stringBuilder.append("SWSLB-20220530-0000-8888");  // SerialNum
+                stringBuilder.append("SWSLB-20220530-0000-7877");  // SerialNum
                 stringBuilder.append("20200101 000014");  // DateTime
                 stringBuilder.append("00");  // paraLen
                 /*============ Body ============*/
@@ -105,10 +104,15 @@ public class ClientSocket {
                     os.flush();
                     Thread.sleep(500);
                     //보내고 reply를 초기화시키고 거기다가 report result를 받아야함
-                    //Arrays.fill(reply, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
+                    Arrays.fill(reply, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
                     stringBuilder.setLength(0); // stringBuilder를 초기화.
-                    String result = new String(reply);
-                    System.out.println("[result] : " + result);
+
+                    is = socket.getInputStream();
+                    if (is.read(reply) < 0)
+                        throw new SocketException();
+
+                    System.out.println("[ACK/NAK Result] : " + new String(reply));
+                    System.out.println("[ACK/NAK Result] : " + reply);
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
                 }
