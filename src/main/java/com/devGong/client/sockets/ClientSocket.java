@@ -55,7 +55,9 @@ public class ClientSocket {
         System.out.println("[ PreInstall Receiving message ]");
         try {
             InputStream is = socket.getInputStream();
+
             byte[] reply = new byte[100];
+
             if (is.read(reply) < 0)
 
                 throw new SocketException();
@@ -88,10 +90,10 @@ public class ClientSocket {
                 stringBuilder.append("3");   // Sampling Time
                 stringBuilder.append("4");   // SampleRate
                 stringBuilder.append("862785043595621");   // Modem Number
-                stringBuilder.append("test_hkchoi000000000000000000000");   // Project, 32바이트가 안되도 펌웨어에서 채워서 보내준다함.
-                stringBuilder.append("producttest00000");   // SID
+                stringBuilder.append("test_hkchoi                     ");   // Project, 32바이트가 안되도 펌웨어에서 채워서 보내준다함.
+                stringBuilder.append("producttest     ");   // SID
                 stringBuilder.append(5);   // Period 1
-                stringBuilder.append("thingsware.co.kr0000000000000000");   // Server URL   32
+                stringBuilder.append("thingsware.co.kr                ");   // Server URL   32
                 stringBuilder.append("6669");   // Server Port  4
                 stringBuilder.append("274a");   // CheckSum 2
                 totalData = stringBuilder.toString().getBytes();
