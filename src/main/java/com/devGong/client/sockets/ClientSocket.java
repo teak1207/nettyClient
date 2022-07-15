@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -19,7 +18,10 @@ public class ClientSocket {
     static Scanner sc = new Scanner(System.in);
 
     public void sendFixedLength() {
+
         int key;
+        OutputStream os;
+        InputStream is;
 
         StringBuilder stringBuilder = new StringBuilder();
         /* PRE-INSTALL(31byte) / SETTING / 2:REQUEST / 3:REPORT(141byte) / 4:DATA  */
@@ -31,19 +33,36 @@ public class ClientSocket {
             case 0:
                 System.out.println("=== [ PREINSTALL PROCESS START ] ===");
 
+/*
+                //new ver
                 stringBuilder.append("0"); //Flag 1
                 stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber  24
                 stringBuilder.append("20200101 000014"); //DateTime  15
-                stringBuilder.append("00"); //paraLen  2
-                stringBuilder.append("862785043595621"); //Modem(phone ,기존) Number=> 15자리
-                stringBuilder.append("00"); //debug message,  변동사항 거의 있을수 있음. 2
-                stringBuilder.append("AAAA"); //check sum 2
+                stringBuilder.append("D"); //request type 1 char
+                stringBuilder.append("00"); //paraLen  2      hex
+                stringBuilder.append("862785043595621"); //   hex   Modem(phone ,기존) Number=> 15자리  =====> hex 로 바뀔거임...
+                stringBuilder.append("00"); //debug message,  hex   변동사항 거의 있을수 있음. 2
+                stringBuilder.append("AAAA"); //check sum 2   hex
+*/
+                // old ver  64
+                stringBuilder.append("0"); //Flag 1
+                stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber  24
+                stringBuilder.append("20200101 000014"); //DateTime  15
+                stringBuilder.append("D"); //request type 1 char
+                stringBuilder.append("00"); //paraLen  4      number
+                stringBuilder.append("862785043595621"); //   number   Modem(phone ,기존) Number=> 15자리  =====> hex 로 바뀔거임...
+                stringBuilder.append("00"); //debug message,  number   변동사항 거의 있을수 있음. 2
+                stringBuilder.append("fe"); //check sum 2   number
+
         }
 
         byte[] totalData = stringBuilder.toString().getBytes();
 
+
+        System.out.println("totalData " + new String(totalData));
+
         try {
-            OutputStream os = socket.getOutputStream();
+            os = socket.getOutputStream();
             os.write(totalData);
             os.flush();
             Thread.sleep(500);
@@ -53,27 +72,33 @@ public class ClientSocket {
         }
 
         System.out.println("[ PreInstall Receiving message ]");
+
         try {
-            InputStream is = socket.getInputStream();
+            is = socket.getInputStream();
 
-            byte[] reply = new byte[100];
+            byte[] reply = new byte[is.read()];
 
+            System.out.println("reply-->" + new String(reply));
+            System.out.println("length-->" + reply.length);
             if (is.read(reply) < 0)
-
                 throw new SocketException();
 
             System.out.println(" [Receive preinstall INFO] : " + new String(reply));
 
 
             /* reply가 맞는 값이 왔다면 ACK or NAK 와 report 값을 서버에 보내줌! */
-
-            OutputStream os;
             System.out.println("=== [ REPORT PROCESS START ] ===");
 
             if (reply != null) {    // 서버에서 날라온 값이 있을 경우, ACK을 Flag로 가져감.
                 /*============ 저장공간 리셋 ========*/
                 Arrays.fill(totalData, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
+
+                System.out.println("totalData reset" + new String(totalData));
+                System.out.println("stringBuilder-->" + stringBuilder);
+
                 stringBuilder.setLength(0); // stringBuilder를 초기화.
+                System.out.println("stringBuilder reset -->" + stringBuilder);
+
                 /*============ Header ============*/
                 stringBuilder.append("8");  // Flag
                 stringBuilder.append("SWSLB-20220530-0000-7877");  // SerialNum
@@ -97,8 +122,8 @@ public class ClientSocket {
                 stringBuilder.append("6669");   // Server Port  4
                 stringBuilder.append("274a");   // CheckSum 2
                 totalData = stringBuilder.toString().getBytes();
-                String converted = new String(totalData, StandardCharsets.UTF_8); //byte[] -> String 변환
-                System.out.println("[ 보낼 REPORT INFO ] : " + converted);
+                String report = new String(totalData);
+                System.out.println("report-->" + report);
 
                 try {
                     os = socket.getOutputStream();
