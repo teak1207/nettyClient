@@ -5,9 +5,11 @@ import lombok.AllArgsConstructor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.Scanner;
 
 
@@ -16,6 +18,44 @@ public class ClientSocket {
     private Socket socket;
 
     static Scanner sc = new Scanner(System.in);
+
+    public byte[] makeChecksum(String totalData) {
+        int total = 0;
+        for (int i = 0; i < totalData.length(); i++) {
+            total += totalData.charAt(i);    // 문자열 10진수로 바꿔서 저장
+        }
+        System.out.println(total);
+//        String first  = String.valueOf(total).substring(0, 2);
+//        String second  = String.valueOf(total).substring(2, 4);
+//        System.out.println(first);
+//        System.out.println(second);
+
+        String hex = Integer.toHexString(total);
+
+        String first = "";
+        String second = "";
+
+        if(hex.length() == 3) {
+            first = hex.substring(0, 1);
+            second = hex.substring(1, 3);
+        } else if(hex.length() == 4) {
+            first = hex.substring(0, 2);
+            second = hex.substring(2, 4);
+        }
+        System.out.println(first);
+        System.out.println(second);
+        // "c" -> "0x0c" (byte)
+        byte[] firstByte = new BigInteger(first, 16).toByteArray();
+//        byte[] firstByte = first.getBytes();
+        byte[] secondByte = new  BigInteger(second, 16).toByteArray();
+
+        byte[] totalByte = new byte[2];
+        totalByte[0] = firstByte[0];
+        totalByte[1] = secondByte[0];
+
+        return totalByte;
+
+    }
 
     public void sendFixedLength() {
 
@@ -33,18 +73,6 @@ public class ClientSocket {
             case 0:
                 System.out.println("=== [ PREINSTALL PROCESS START ] ===");
 
-/*
-                //new ver
-                stringBuilder.append("0"); //Flag 1
-                stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber  24
-                stringBuilder.append("20200101 000014"); //DateTime  15
-                stringBuilder.append("D"); //request type 1 char
-                stringBuilder.append("00"); //paraLen  2      hex
-                stringBuilder.append("862785043595621"); //   hex   Modem(phone ,기존) Number=> 15자리  =====> hex 로 바뀔거임...
-                stringBuilder.append("00"); //debug message,  hex   변동사항 거의 있을수 있음. 2
-                stringBuilder.append("AAAA"); //check sum 2   hex
-*/
-                // old ver  64
                 stringBuilder.append("0"); //Flag 1
                 stringBuilder.append("SWSLB-20220530-0000-0001"); // SerialNumber  24
                 stringBuilder.append("20200101 000014"); //DateTime  15
@@ -52,22 +80,22 @@ public class ClientSocket {
                 stringBuilder.append("00"); //paraLen  4      number
                 stringBuilder.append("862785043595621"); //   number   Modem(phone ,기존) Number=> 15자리  =====> hex 로 바뀔거임...
                 stringBuilder.append("00"); //debug message,  number   변동사항 거의 있을수 있음. 2
-                stringBuilder.append("fe"); //check sum 2   number
-
+//                stringBuilder.append("fe"); //check sum 2   number
         }
 
         byte[] totalData = stringBuilder.toString().getBytes();
-
 
         System.out.println("totalData " + new String(totalData));
 
         try {
             os = socket.getOutputStream();
             os.write(totalData);
+            os.write(makeChecksum(stringBuilder.toString()));
             os.flush();
-            Thread.sleep(500);
+//            Thread.sleep(2000);
 
-        } catch (InterruptedException | IOException e) {
+        } catch (IOException e) {
+//        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
 
@@ -76,10 +104,8 @@ public class ClientSocket {
         try {
             is = socket.getInputStream();
 
-            byte[] reply = new byte[is.read()];
+            byte[] reply = new byte[100];
 
-            System.out.println("reply-->" + new String(reply));
-            System.out.println("length-->" + reply.length);
             if (is.read(reply) < 0)
                 throw new SocketException();
 
@@ -94,10 +120,9 @@ public class ClientSocket {
                 Arrays.fill(totalData, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
 
                 System.out.println("totalData reset" + new String(totalData));
-                System.out.println("stringBuilder-->" + stringBuilder);
+//                System.out.println("stringBuilder-->" + stringBuilder);
 
                 stringBuilder.setLength(0); // stringBuilder를 초기화.
-                System.out.println("stringBuilder reset -->" + stringBuilder);
 
                 /*============ Header ============*/
                 stringBuilder.append("8");  // Flag
@@ -129,18 +154,21 @@ public class ClientSocket {
                     os = socket.getOutputStream();
                     os.write(totalData);
                     os.flush();
-                    Thread.sleep(500);
+//                    Thread.sleep(2000);
                     //보내고 reply를 초기화시키고 거기다가 report result를 받아야함
                     Arrays.fill(reply, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
+
+                    byte[] test = new byte[1];
                     stringBuilder.setLength(0); // stringBuilder를 초기화.
 
                     is = socket.getInputStream();
-                    if (is.read(reply) < 0)
+                    if (is.read(test) < 0)
                         throw new SocketException();
 
-                    System.out.println("[ACK/NAK Result] : " + new String(reply));
-                    System.out.println("[ACK/NAK Result] : " + reply);
-                } catch (InterruptedException | IOException e) {
+                    System.out.println("[ACK/NAK Result] : " + new String(test));
+//                    System.out.println("[ACK/NAK Result] : " + reply);
+                } catch (IOException e) {
+//                } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
                 }
 
