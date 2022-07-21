@@ -18,7 +18,11 @@ public class NonSslSocket{
             socket.connect(address);
 
             ClientSocket clientSocket = new ClientSocket(socket);
-            clientSocket.sendFixedLength();
+            clientSocket.preinstallProcess();
+            clientSocket.settingProcess();
+//            clientSocket.requestProcess();
+//            clientSocket.reportProcess();
+//            clientSocket.dataProcess();
         } catch (IOException e) {
             e.printStackTrace();
         }
