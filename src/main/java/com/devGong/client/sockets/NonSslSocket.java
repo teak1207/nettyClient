@@ -19,7 +19,7 @@ public class NonSslSocket{
 
             ClientSocket clientSocket = new ClientSocket(socket);
             clientSocket.preinstallProcess();
-            clientSocket.settingProcess();
+//            clientSocket.settingProcess();
 //            clientSocket.requestProcess();
 //            clientSocket.reportProcess();
 //            clientSocket.dataProcess();
