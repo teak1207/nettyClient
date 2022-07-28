@@ -199,6 +199,8 @@ public class ClientSocket {
 
                         is = socket.getInputStream();
                         if (is.read(resultArr) < 0)
+
+                            //시발것
                             throw new SocketException();
 
                         System.out.println("[ACK/NAK Result] : " + new String(resultArr));
