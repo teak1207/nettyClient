@@ -1,4 +1,5 @@
 package com.devGong.client.sockets;
+
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;
@@ -7,9 +8,10 @@ import java.net.Socket;
 import java.net.SocketAddress;
 
 @AllArgsConstructor
-public class NonSslSocket{
+public class NonSslSocket {
     private String host;
     private int port;
+
     // 길이 + 주소 + 포트번혼
     public void run() {
         try {
@@ -18,8 +20,13 @@ public class NonSslSocket{
             socket.connect(address);
 
             ClientSocket clientSocket = new ClientSocket(socket);
-            clientSocket.preinstallProcess();
-//            clientSocket.settingProcess();
+
+            boolean preinstallResult = clientSocket.preinstallProcess();
+            clientSocket.settingProcess(preinstallResult);
+            boolean requestResult;
+            boolean settingResult;
+            boolean dataResult;
+
 //            clientSocket.requestProcess();
 //            clientSocket.reportProcess();
 //            clientSocket.dataProcess();

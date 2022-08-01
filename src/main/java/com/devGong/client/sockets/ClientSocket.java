@@ -60,8 +60,44 @@ public class ClientSocket {
         }
     }
 
+    public void settingProcess(boolean preinstallResult) {
+        String key;
+        OutputStream os;
+        InputStream is;
 
-    public void preinstallProcess() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        System.out.println("Input => A: PRE_INSTALL / 6:SETTING / 7:REPORT / 4:REQUEST / 5:DATA / 8: ACK / 9: NAK");
+        key = sc.nextLine();
+        if (isNumeric(key) && Character.getNumericValue(key.toString().charAt(0)) == 6) { //SETTING
+
+            stringBuilder.append("6"); //Flag 1
+            stringBuilder.append("SWSLB-20220530-0000-0001"); // Sensor ID  24
+            stringBuilder.append("20220205 999914"); //DateTime  15
+            stringBuilder.append("D"); //request type 1 char
+            stringBuilder.append("00"); //paraLen  4      number
+            stringBuilder.append("2203_product    "); // SID  16
+            stringBuilder.append("2203_30_prod    "); // pname 16
+
+            byte[] totalData = stringBuilder.toString().getBytes();
+
+            System.out.println("totalData " + new String(totalData));
+
+            try {
+                os = socket.getOutputStream();
+                os.write(totalData);
+                os.write(makeChecksum(stringBuilder.toString()));
+                os.flush();
+                Thread.sleep(500);
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+
+    public boolean preinstallProcess() {
 
         String key;
         OutputStream os;
@@ -73,7 +109,7 @@ public class ClientSocket {
         System.out.println("Input => A: PRE_INSTALL / 6:SETTING / 7:REPORT / 4:REQUEST / 5:DATA / 8: ACK / 9: NAK");
         key = sc.nextLine();
 
-        if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 4) { //REQUEST
+/*        if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 4) { //REQUEST
             System.out.println("REQUEST");
 
         } else if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 5) { //DATA
@@ -82,7 +118,8 @@ public class ClientSocket {
             System.out.println("SETTING");
         } else if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 7) { //REPORT
             System.out.println("REPORT");
-        } else if (isNumeric(key) == false && key.equals("A")) {  //PRE_INSTALL
+        } else */
+        if (isNumeric(key) == false && key.equals("A")) {  //PRE_INSTALL
             System.out.println("=== [ PREINSTALL PROCESS START ] ===");
 
             stringBuilder.append("A"); //Flag 1
@@ -113,9 +150,9 @@ public class ClientSocket {
             try {
                 is = socket.getInputStream();
 
-                byte[] reply = new byte[3000];
+                byte[] reply = new byte[150];
                 System.out.println("reply-->" + new String(reply));
-                System.out.println("length-->" + reply.length);
+//                System.out.println("length-->" + reply.length);
 
 
                 if (is.read(reply) < 0)
@@ -164,31 +201,27 @@ public class ClientSocket {
                     totalData = stringBuilder.toString().getBytes();
                     String report = new String(totalData);
                     System.out.println("[report(D->S)]-->" + report);
-
+                    byte[] result = new byte[1];
+                    boolean preInstallEndchk = false;
                     try {
                         os = socket.getOutputStream();
                         os.write(totalData);
                         os.flush();
                         Thread.sleep(500);
                         Arrays.fill(reply, (byte) 0);
-
-                        byte[] test = new byte[1];
                         stringBuilder.setLength(0);
 
                         is = socket.getInputStream();
-                        if (is.read(test) < 0)
+                        if (is.read(result) < 0)
                             throw new SocketException();
 
-                        System.out.println("[ACK/NAK Result] : " + new String(test));
+                        System.out.println("[ACK/NAK Result] : " + new String(result));
+//                         test = new String(result);
+                        preInstallEndchk = true;
+                        return preInstallEndchk;
                     } catch (InterruptedException | IOException e) {
                         e.printStackTrace();
                     }
-
-                    // ACK ---> setting process 타야함
-
-
-
-
 
                 } else {
                     // 서버에서 날라온 값이 없을 경우, NAK(9)을 Flag로 가져감.
@@ -246,86 +279,19 @@ public class ClientSocket {
                             throw new SocketException();
 
                         System.out.println("[ACK/NAK Result] : " + new String(test));
+                        return false;
                     } catch (InterruptedException | IOException e) {
                         e.printStackTrace();
                     }
                     // NAK ---> 다시 프리인스톨 처음 단계로 돌아감.
-
-
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        return false;
     }
 
-  /*  public void settingProcess() {
-        System.out.println("=== [ SETTING PROCESS START ] ===");
-
-        int key;
-        OutputStream os;
-        InputStream is;
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        System.out.println("Input => 0: PRE-INSTALL / 6:SETTING / 2:REPORT / 3:REQUEST / 4:DATA / 8: ACK / 9: NAK");
-        key = sc.nextInt();
-
-        if (key == 6) {
-//            ============ Header ============
-            stringBuilder.append("6");  // Flag | char | 1
-            stringBuilder.append("SWSLB-20220530-0000-0001");  // SerialNum | char | 24
-            stringBuilder.append("20200101 000014");  // DataTime | char 15
-            stringBuilder.append("D");  // request type
-            stringBuilder.append("00");  // paraLen | number 4
-//            ============ Body ============
-            stringBuilder.append("0200"); // recordingtime1 | char| 4
-            stringBuilder.append("0300"); // recordingtime2 | char| 4
-            stringBuilder.append("0400"); // recordingtime3 | char| 4
-            stringBuilder.append("0959"); // FM Radio | char| 4
-            stringBuilder.append("producttest"); // sid | char| 16
-            stringBuilder.append("5"); // samplingTime | number | 1 | 2~9 sec
-            stringBuilder.append("0"); // sleep | char| 1 | 0:Off, 1:On
-            stringBuilder.append("0"); // F-reset | number| 1 | 0:Off, 1:On
-            stringBuilder.append("0"); // Px | char| 1 | 0:Off, 1:On | 0 or 1
-            stringBuilder.append("0"); // Py | char| 1 | 0:Off, 1:On | 0 or 1
-            stringBuilder.append("0"); // Active | char| 1 | 0:Off, 1:On | 0 or 1
-            stringBuilder.append("4"); // SampleRate |number| 1 |  4->4k(4000)  Or 8->8k(8000)
-            stringBuilder.append("thingsware.co.kr"); // ServerUrl |char| 32
-            stringBuilder.append("0000"); // serverPort |char| 4
-            stringBuilder.append("thingsware.co.kr"); // DB Url |char| 4
-            stringBuilder.append("0000"); // DB Port |char| 4
-        }
-        byte period = 30;
-        String px = "127.241155";
-        String py = "37.315906";
-
-        byte[] settingTotalData = stringBuilder.toString().getBytes();
-
-        System.out.println(Arrays.toString(settingTotalData));
-
-        byte[] arr1 = Arrays.copyOfRange(settingTotalData, 0, 54);
-        byte[] arr2 = Arrays.copyOfRange(settingTotalData, 54, 59);
-        byte[] arr3 = Arrays.copyOfRange(settingTotalData, 59, 99);
-
-        System.out.println("[arr1] : " + new String(arr1));
-        System.out.println("[period] : " + period);
-        System.out.println("[arr2] : " + new String(arr2));
-
-        try {
-            os = socket.getOutputStream();
-
-            os.write(arr1);
-            os.write(period);
-            os.write(arr2);
-//            os.write(makeLocation(px, py));    // 여기서 지금 합쳐서 보내던데 ㅅㅂ
-            os.write(arr3);
-            os.write(makeChecksum(stringBuilder.toString()));
-            os.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }*/
 
     public void requestProcess() {
         System.out.println("[requestProcess]");
