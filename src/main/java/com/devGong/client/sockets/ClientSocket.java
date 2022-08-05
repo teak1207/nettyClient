@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Arrays;
@@ -18,6 +17,12 @@ public class ClientSocket {
     static Scanner sc = new Scanner(System.in);
 
 
+    public byte fudnsml(String input) {
+        return input.length() == 1 ? (byte) Character.digit(input.charAt(0), 16)
+                : (byte) ((Character.digit(input.charAt(0), 16) << 4) + Character.digit(input.charAt(1), 16));
+    }
+
+
     public byte[] makeChecksum(String totalData) {
         int total = 0;
         for (int i = 0; i < totalData.length(); i++) {
@@ -26,7 +31,6 @@ public class ClientSocket {
         System.out.println("[글자를 전부 더한 수] : " + total);
 
         String hex = Integer.toHexString(total);
-
         String first = "";
         String second = "";
 
@@ -40,12 +44,12 @@ public class ClientSocket {
         System.out.println("[first] : " + first);
         System.out.println("[second] : " + second);
         // "c" -> "0x0c" (byte)
-        byte[] firstByte = new BigInteger(first, 16).toByteArray();
-        byte[] secondByte = new BigInteger(second, 16).toByteArray();
+        byte firstByte = fudnsml(first);
+        byte secondByte = fudnsml(second);
 
         byte[] totalByte = new byte[2];
-        totalByte[0] = firstByte[0];
-        totalByte[1] = secondByte[0];
+        totalByte[0] = firstByte;
+        totalByte[1] = secondByte;
 
         return totalByte;
 
@@ -69,24 +73,34 @@ public class ClientSocket {
 
         System.out.println("Input => A: PRE_INSTALL / 6:SETTING / 7:REPORT / 4:REQUEST / 5:DATA / 8: ACK / 9: NAK");
         key = sc.nextLine();
-        if (isNumeric(key) && Character.getNumericValue(key.toString().charAt(0)) == 6) { //SETTING
+        if (isNumeric(key) && Character.getNumericValue(key.toString().charAt(0)) == 6 && preinstallResult) { //SETTING
 
             stringBuilder.append("6"); //Flag 1
-            stringBuilder.append("SWSLB-20220530-0000-0001"); // Sensor ID  24
+            stringBuilder.append("SWFLB-20210812-0106-1678"); // Sensor ID  24
             stringBuilder.append("20220205 999914"); //DateTime  15
             stringBuilder.append("D"); //request type 1 char
-            stringBuilder.append("00"); //paraLen  4      number
-            stringBuilder.append("2203_product    "); // SID  16
-            stringBuilder.append("2203_30_prod    "); // pname 16
+            stringBuilder.append("00  "); //paraLen  4      number
+            stringBuilder.append("daeguf          "); // SID  16
+            stringBuilder.append("0109_debec      "); // pname 16
 
             byte[] totalData = stringBuilder.toString().getBytes();
+            byte[] chkSumData =makeChecksum(stringBuilder.toString());
+            int arrayLength = totalData.length + chkSumData.length;
+
+            byte[] finalArr = new byte[arrayLength];
+
+            System.arraycopy(totalData, 0, finalArr, 0, totalData.length);
+            System.arraycopy(chkSumData, 0, finalArr, finalArr.length-2, chkSumData.length);
 
             System.out.println("totalData " + new String(totalData));
+            System.out.println("chkSumData " + new String(chkSumData));
+            System.out.println("finalArr " + new String(finalArr));
+
 
             try {
                 os = socket.getOutputStream();
-                os.write(totalData);
-                os.write(makeChecksum(stringBuilder.toString()));
+                os.write(finalArr);
+//                os.write(makeChecksum(stringBuilder.toString()));
                 os.flush();
                 Thread.sleep(500);
             } catch (InterruptedException | IOException e) {
@@ -109,16 +123,6 @@ public class ClientSocket {
         System.out.println("Input => A: PRE_INSTALL / 6:SETTING / 7:REPORT / 4:REQUEST / 5:DATA / 8: ACK / 9: NAK");
         key = sc.nextLine();
 
-/*        if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 4) { //REQUEST
-            System.out.println("REQUEST");
-
-        } else if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 5) { //DATA
-            System.out.println("DATA");
-        } else if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 6) { //SETTING
-            System.out.println("SETTING");
-        } else if (isNumeric(key) == true && Character.getNumericValue(key.toString().charAt(0)) == 7) { //REPORT
-            System.out.println("REPORT");
-        } else */
         if (isNumeric(key) == false && key.equals("A")) {  //PRE_INSTALL
             System.out.println("=== [ PREINSTALL PROCESS START ] ===");
 
