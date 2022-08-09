@@ -16,7 +16,6 @@ public class ClientSocket {
     private Socket socket;
     static Scanner sc = new Scanner(System.in);
 
-
     public byte fudnsml(String input) {
         return input.length() == 1 ? (byte) Character.digit(input.charAt(0), 16)
                 : (byte) ((Character.digit(input.charAt(0), 16) << 4) + Character.digit(input.charAt(1), 16));
@@ -64,7 +63,15 @@ public class ClientSocket {
         }
     }
 
-    public void settingProcess(boolean preinstallResult) {
+    public boolean dataProcess(boolean settingResult) {
+
+        System.out.println("CROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFIT");
+
+        return true;
+    }
+
+
+    public boolean settingProcess(boolean preinstallResult) {
         String key;
         OutputStream os;
         InputStream is;
@@ -84,32 +91,93 @@ public class ClientSocket {
             stringBuilder.append("0109_debec      "); // pname 16
 
             byte[] totalData = stringBuilder.toString().getBytes();
-            byte[] chkSumData =makeChecksum(stringBuilder.toString());
+            byte[] chkSumData = makeChecksum(stringBuilder.toString());
             int arrayLength = totalData.length + chkSumData.length;
 
             byte[] finalArr = new byte[arrayLength];
 
             System.arraycopy(totalData, 0, finalArr, 0, totalData.length);
-            System.arraycopy(chkSumData, 0, finalArr, finalArr.length-2, chkSumData.length);
+            System.arraycopy(chkSumData, 0, finalArr, finalArr.length - 2, chkSumData.length);
 
             System.out.println("totalData " + new String(totalData));
             System.out.println("chkSumData " + new String(chkSumData));
             System.out.println("finalArr " + new String(finalArr));
 
-
             try {
                 os = socket.getOutputStream();
                 os.write(finalArr);
-//                os.write(makeChecksum(stringBuilder.toString()));
                 os.flush();
                 Thread.sleep(500);
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
 
-        }
-    }
+            System.out.println("===[ Setting Receiving Result ]===");
+            try {
+                is = socket.getInputStream();
 
+                byte[] SettingReceiveResult = new byte[200];
+                System.out.println("[Setting Receive] -->" + new String(SettingReceiveResult));
+
+
+                if (is.read(SettingReceiveResult) < 0)
+                    throw new SocketException();
+                // 넘겨 받은 값을 찍어줌
+                System.out.println("[Setting Receive INFO] : " + new String(SettingReceiveResult));
+
+                //ack를 던져줌
+                if (SettingReceiveResult != null) {
+                    Arrays.fill(totalData, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
+                    stringBuilder.setLength(0); // stringBuilder를 초기화.
+                    stringBuilder.append("8");
+                    System.out.println(stringBuilder.toString());
+
+                    if (stringBuilder.toString().equals("8")) {
+                        return true;
+                    }
+
+                    // 재요청
+                } else {
+                    Arrays.fill(totalData, (byte) 0);   //  pre-install 값 담긴 바이트배열  0으로 초기화.
+
+                    stringBuilder.setLength(0); // stringBuilder를 초기화.
+                    System.out.println("==============[재요청]================");
+                    stringBuilder.append("6"); //Flag 1
+                    stringBuilder.append("SWFLB-20210812-0106-1678"); // Sensor ID  24
+                    stringBuilder.append("20220205 999914"); //DateTime  15
+                    stringBuilder.append("D"); //request type 1 char
+                    stringBuilder.append("00  "); //paraLen  4      number
+                    stringBuilder.append("daeguf          "); // SID  16
+                    stringBuilder.append("0109_debec      "); // pname 16
+                    System.out.println("[Re-request] : " + stringBuilder.toString());
+
+                    //---------------------------------------------
+                    System.out.println("[totalData] : " + new String(totalData));
+                    System.out.println("[chkSumData] " + new String(chkSumData));
+                    System.out.println("finalArr " + new String(finalArr));
+
+                    try {
+                        os = socket.getOutputStream();
+                        os.write(finalArr);
+                        os.flush();
+                        Thread.sleep(500);
+                    } catch (InterruptedException | IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("===[ Setting  2nd Receiving result   ]===");
+                    SettingReceiveResult = new byte[200];
+                    if (is.read(SettingReceiveResult) < 0)
+                        throw new SocketException();
+                    System.out.println("[2nd SettingReceiveResult] : " + new String(SettingReceiveResult));
+                    return true;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
 
     public boolean preinstallProcess() {
 
@@ -149,7 +217,7 @@ public class ClientSocket {
                 e.printStackTrace();
             }
 
-            System.out.println("===[ PreInstall Receiving message ]===");
+            System.out.println("===[ PreInstall Receiving Result ]===");
 
             try {
                 is = socket.getInputStream();
@@ -206,7 +274,6 @@ public class ClientSocket {
                     String report = new String(totalData);
                     System.out.println("[report(D->S)]-->" + report);
                     byte[] result = new byte[1];
-                    boolean preInstallEndchk = false;
                     try {
                         os = socket.getOutputStream();
                         os.write(totalData);
@@ -220,9 +287,7 @@ public class ClientSocket {
                             throw new SocketException();
 
                         System.out.println("[ACK/NAK Result] : " + new String(result));
-//                         test = new String(result);
-                        preInstallEndchk = true;
-                        return preInstallEndchk;
+                        return true;
                     } catch (InterruptedException | IOException e) {
                         e.printStackTrace();
                     }

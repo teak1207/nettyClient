@@ -22,13 +22,13 @@ public class NonSslSocket {
             ClientSocket clientSocket = new ClientSocket(socket);
 
             boolean preinstallResult = clientSocket.preinstallProcess();
-            clientSocket.settingProcess(preinstallResult);
-            boolean requestResult;
-            boolean settingResult;
-            boolean dataResult;
 
-//            clientSocket.requestProcess();
-//            clientSocket.reportProcess();
+
+            boolean settingResult = clientSocket.settingProcess(preinstallResult);
+            boolean dataResult = clientSocket.dataProcess(settingResult);;
+            boolean requestResult;
+
+
 //            clientSocket.dataProcess();
         } catch (IOException e) {
             e.printStackTrace();
