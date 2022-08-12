@@ -63,9 +63,90 @@ public class ClientSocket {
         }
     }
 
-    public boolean dataProcess(boolean settingResult) {
+    public boolean reportProcess(boolean settingResult) {
 
-        System.out.println("CROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFITCROSSFIT");
+        System.out.println("[REPORT PROCESS START ]");
+
+        String key;
+        OutputStream os;
+        InputStream is;
+
+        // Setting result가 true이면 동작 --> 분기 조건 다시보기!!! NAK or ack
+        if (settingResult) {
+
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            System.out.println("Input => A: PRE_INSTALL / 6:SETTING / 7:REPORT / 4:REQUEST / 5:DATA / 8: ACK / 9: NAK");
+            key = sc.nextLine();
+            if (isNumeric(key) && Character.getNumericValue(key.toString().charAt(0)) == 7 && settingResult) {
+
+                stringBuilder.append("7"); //Flag 1
+                stringBuilder.append("SWFLB-20220708-0760-3465"); // Sensor ID  24
+//              DB에서 직접 넣어줘야함
+                stringBuilder.append("D"); //request type 1 char
+                stringBuilder.append("00  "); //paraLen  4      number
+
+
+                stringBuilder.append("20220720 0031"); // end Record Time 13
+                stringBuilder.append("0200"); // time1 4
+                stringBuilder.append("0300"); // time2 4
+                stringBuilder.append("0400"); // time3 4
+                stringBuilder.append("0911"); // FM Radio 4
+                stringBuilder.append("L7.400"); // Firmware version 6
+                stringBuilder.append("4.0200"); // Battery Value 6
+                stringBuilder.append(116); // Modem RSSI 1
+                stringBuilder.append("00"); // Device Status 2
+                stringBuilder.append("2"); // Sampling Time 1
+                stringBuilder.append("128.323352"); // px 10
+                stringBuilder.append("34.972365 "); // py 10
+                stringBuilder.append("8212-3268-8662  "); // P_name 16
+                stringBuilder.append("goseong_kw      "); // SID 16
+                stringBuilder.append("1"); // period 1
+                stringBuilder.append("thingsware.co.kr                "); // Server URL 32
+                stringBuilder.append("6699"); // Server Port 477
+                stringBuilder.append("thingsware.co.kr                "); // DB URL 32
+                stringBuilder.append("3306"); // DB Port 4
+                stringBuilder.append(" "); // Sleep 1
+                stringBuilder.append(" "); // Active 1
+                stringBuilder.append(" "); // F_Reset 1
+                stringBuilder.append(" "); // Reset 1
+                stringBuilder.append(" "); // SampleRate 1
+                stringBuilder.append("1"); // Radio Time 1
+//                stringBuilder.append("0109_debec      "); // CREG Count 1
+//                stringBuilder.append("0109_debec      "); // Sleep Count 1
+
+
+                byte[] totalData = stringBuilder.toString().getBytes();
+                byte[] chkSumData = makeChecksum(stringBuilder.toString());
+                int arrayLength = totalData.length + chkSumData.length;
+                byte[] finalArr = new byte[arrayLength];
+
+                System.arraycopy(totalData, 0, finalArr, 0, totalData.length);
+                System.arraycopy(chkSumData, 0, finalArr, finalArr.length - 2, chkSumData.length);
+
+                System.out.println("totalData " + new String(totalData));
+                System.out.println("chkSumData " + new String(chkSumData));
+                System.out.println("finalArr " + new String(finalArr));
+
+                try {
+                    os = socket.getOutputStream();
+                    os.write(finalArr);
+                    os.flush();
+                    Thread.sleep(500);
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+
+
+
+            }
+
+
+        } else {
+
+        }
+
 
         return true;
     }
@@ -361,16 +442,14 @@ public class ClientSocket {
         return false;
     }
 
+    public boolean dataProcess(boolean settingResult) {
+
+        return true;
+    }
+
 
     public void requestProcess() {
         System.out.println("[requestProcess]");
     }
 
-    public void reportProcess() {
-        System.out.println("[reportProcess]");
-    }
-
-    public void dataProcess() {
-        System.out.println("[dataProcess]");
-    }
 }
