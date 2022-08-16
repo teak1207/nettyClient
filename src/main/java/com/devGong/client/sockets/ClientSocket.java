@@ -86,8 +86,6 @@ public class ClientSocket {
 //              DB에서 직접 넣어줘야함
                 stringBuilder.append("D"); //request type 1 char
                 stringBuilder.append("00  "); //paraLen  4      number
-
-
                 stringBuilder.append("20220720 0031"); // end Record Time 13
                 stringBuilder.append("0200"); // time1 4
                 stringBuilder.append("0300"); // time2 4
@@ -113,8 +111,8 @@ public class ClientSocket {
                 stringBuilder.append(" "); // Reset 1
                 stringBuilder.append(" "); // SampleRate 1
                 stringBuilder.append("1"); // Radio Time 1
-//                stringBuilder.append("0109_debec      "); // CREG Count 1
-//                stringBuilder.append("0109_debec      "); // Sleep Count 1
+                stringBuilder.append("1  "); // CREG Count 1
+                stringBuilder.append("2  "); // Sleep Count 1
 
 
                 byte[] totalData = stringBuilder.toString().getBytes();
