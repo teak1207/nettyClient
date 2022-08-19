@@ -63,7 +63,59 @@ public class ClientSocket {
         }
     }
 
-    public boolean reportProcess(boolean settingResult) {
+
+    public boolean requestProcess(boolean reportResult) {
+        System.out.println("[REQUEST PROCESS START ]");
+
+        String key;
+        OutputStream os;
+        InputStream is;
+        StringBuilder stringBuilder = new StringBuilder();
+        if (reportResult) {
+            System.out.println("Input => A: PRE_INSTALL / 6:SETTING / 7:REPORT / 4:REQUEST / 5:DATA / 8: ACK / 9: NAK");
+            key = sc.nextLine();
+            if (isNumeric(key) && Character.getNumericValue(key.toString().charAt(0)) == 4 && reportResult) {
+
+                stringBuilder.append("4"); // Flag 1
+                stringBuilder.append("SWFLB-20220708-0760-3465"); // Sensor ID  24
+                stringBuilder.append("20220205 999914"); // DateTime  15
+                stringBuilder.append("D"); // request type 1 char
+                stringBuilder.append("00  "); // paraLen  4      number
+
+                stringBuilder.append("00"); // frame 개수       2 number
+                stringBuilder.append("    "); //data size/frame  4 number
+                stringBuilder.append(8); //samplerate       1 number
+
+                byte[] totalData = stringBuilder.toString().getBytes();
+                byte[] chkSumData = makeChecksum(stringBuilder.toString());
+                int arrayLength = totalData.length + chkSumData.length;
+
+                byte[] finalArr = new byte[arrayLength];
+
+                System.arraycopy(totalData, 0, finalArr, 0, totalData.length);
+                System.arraycopy(chkSumData, 0, finalArr, finalArr.length - 2, chkSumData.length);
+
+                System.out.println("totalData " + new String(totalData));
+                System.out.println("chkSumData " + new String(chkSumData));
+                System.out.println("finalArr " + new String(finalArr));
+
+                try {
+                    os = socket.getOutputStream();
+                    os.write(finalArr);
+                    os.flush();
+                    Thread.sleep(500);
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+
+
+            }
+        }
+
+        return true;
+    }
+
+    public boolean reportProcess(boolean settingResult) throws IOException {
 
         System.out.println("[REPORT PROCESS START ]");
 
@@ -73,7 +125,6 @@ public class ClientSocket {
 
         // Setting result가 true이면 동작 --> 분기 조건 다시보기!!! NAK or ack
         if (settingResult) {
-
 
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -125,7 +176,6 @@ public class ClientSocket {
 
                 System.out.println("totalData " + new String(totalData));
                 System.out.println("chkSumData " + new String(chkSumData));
-                System.out.println("finalArr " + new String(finalArr));
 
                 try {
                     os = socket.getOutputStream();
@@ -136,17 +186,17 @@ public class ClientSocket {
                     e.printStackTrace();
                 }
 
+                byte[] signalResponse = new byte[1];
+                stringBuilder.setLength(0);
 
-
+                is = socket.getInputStream();
+                if (is.read(signalResponse) < 0)
+                    throw new SocketException();
+                System.out.println("[signalResponse (ACK / NAK)] : " + new String(signalResponse));
+                return true;
             }
-
-
-        } else {
-
         }
-
-
-        return true;
+        return false;
     }
 
 
@@ -419,14 +469,14 @@ public class ClientSocket {
                         Thread.sleep(500);
                         Arrays.fill(reply, (byte) 0);
 
-                        byte[] test = new byte[1];
+                        byte[] returnResult = new byte[1];
                         stringBuilder.setLength(0);
 
                         is = socket.getInputStream();
-                        if (is.read(test) < 0)
+                        if (is.read(returnResult) < 0)
                             throw new SocketException();
 
-                        System.out.println("[ACK/NAK Result] : " + new String(test));
+                        System.out.println("[ACK/NAK Result] : " + new String(returnResult));
                         return false;
                     } catch (InterruptedException | IOException e) {
                         e.printStackTrace();
@@ -445,9 +495,5 @@ public class ClientSocket {
         return true;
     }
 
-
-    public void requestProcess() {
-        System.out.println("[requestProcess]");
-    }
 
 }

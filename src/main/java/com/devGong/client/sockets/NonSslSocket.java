@@ -29,19 +29,19 @@ public class NonSslSocket {
 //            clientSocket.reportProcess(dataResult);
 
 
-
-            if(preinstallResult){
+            if (preinstallResult) {
                 boolean settingResult = clientSocket.settingProcess(true);
-                if(settingResult){
+                if (settingResult) {
                     boolean reportResult = clientSocket.reportProcess(true);
 
-                    /*if(reportResult){
-                    boolean dataResult =   clientSocket.requestProcess(true);
-                    }*/
+                    if (reportResult) {
+                        boolean requestResult = clientSocket.requestProcess(true);
+                    }
+
+
                 }
             }
             boolean requestResult;
-
 
 
 //            clientSocket.dataProcess();
