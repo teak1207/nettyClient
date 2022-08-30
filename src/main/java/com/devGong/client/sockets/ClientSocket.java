@@ -10,7 +10,6 @@ import java.net.SocketException;
 import java.util.Arrays;
 import java.util.Scanner;
 
-
 @AllArgsConstructor
 public class ClientSocket {
     private Socket socket;
@@ -63,7 +62,7 @@ public class ClientSocket {
         }
     }
 
-
+    /*=======================================================================*/
     public boolean requestProcess(boolean reportResult) {
         System.out.println("[REQUEST PROCESS START ]");
 
@@ -78,18 +77,18 @@ public class ClientSocket {
 
                 stringBuilder.append("4"); // Flag 1
                 stringBuilder.append("SWFLB-20220708-0760-3465"); // Sensor ID  24
-                stringBuilder.append("20220205 999914"); // DateTime  15
+                stringBuilder.append("20220819_110021"); // DateTime  15
                 stringBuilder.append("D"); // request type 1 char
                 stringBuilder.append("00  "); // paraLen  4      number
 
-                stringBuilder.append("00"); // frame 개수       2 number
-                stringBuilder.append("    "); //data size/frame  4 number
-                stringBuilder.append(8); //samplerate       1 number
+                stringBuilder.append(5); // frame 개수       2 number
+                stringBuilder.append(256); //data size/frame  4 number
+                stringBuilder.append(4); //samplerate       1 number
 
                 byte[] totalData = stringBuilder.toString().getBytes();
                 byte[] chkSumData = makeChecksum(stringBuilder.toString());
                 int arrayLength = totalData.length + chkSumData.length;
-
+                byte[] result = new byte[1];
                 byte[] finalArr = new byte[arrayLength];
 
                 System.arraycopy(totalData, 0, finalArr, 0, totalData.length);
@@ -104,17 +103,25 @@ public class ClientSocket {
                     os.write(finalArr);
                     os.flush();
                     Thread.sleep(500);
+
+                    is = socket.getInputStream();
+                    is.read(result);
+                    System.out.println("[ACK/NAK Result] : " + new String(result));
+                    System.out.println("[END] : request process finish");
+
+                    // NAK 이면 False Return
+                    if (result[0] == '9') {
+                        return false;
+                    }
+                    return true;
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
                 }
-
-
             }
         }
-
-        return true;
+        return false;
     }
-
+    /*=======================================================================*/
     public boolean reportProcess(boolean settingResult) throws IOException {
 
         System.out.println("[REPORT PROCESS START ]");
@@ -198,6 +205,57 @@ public class ClientSocket {
         }
         return false;
     }
+
+    /*=======================================================================*/
+    public boolean dataProcess(boolean requestResult) {
+
+        String key;
+        OutputStream os;
+        InputStream is;
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        if (requestResult) {
+            System.out.println("Input => A: PRE_INSTALL / 6:SETTING / 7:REPORT / 4:REQUEST / 5:DATA / 8: ACK / 9: NAK");
+            key = sc.nextLine();
+            if (isNumeric(key) && Character.getNumericValue(key.toString().charAt(0)) == 5 && requestResult) {
+
+                stringBuilder.append("5"); //Flag 1
+                stringBuilder.append("SWFLB-20220708-0760-3465"); // Sensor ID  24
+                stringBuilder.append("20220819_110021"); //DateTime  15
+                stringBuilder.append("D"); //request type 1 char
+                stringBuilder.append("00  "); //paraLen  4      number
+
+                //data  256 byte
+                stringBuilder.append("scsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsolutionscsols");
+
+                byte[] totalData = stringBuilder.toString().getBytes();
+                byte[] chkSumData = makeChecksum(stringBuilder.toString());
+                int arrayLength = totalData.length + chkSumData.length;
+                byte[] finalArr = new byte[arrayLength];
+
+                System.arraycopy(totalData, 0, finalArr, 0, totalData.length);
+                System.arraycopy(chkSumData, 0, finalArr, finalArr.length - 2, chkSumData.length);
+
+                System.out.println("totalData " + new String(totalData));
+                System.out.println("chkSumData " + new String(chkSumData));
+
+                try {
+                    os = socket.getOutputStream();
+                    os.write(finalArr);
+                    os.flush();
+                    Thread.sleep(500);
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+
+        return true;
+    }
+    /*=======================================================================*/
 
 
     public boolean settingProcess(boolean preinstallResult) {
@@ -329,7 +387,7 @@ public class ClientSocket {
             stringBuilder.append("D"); //request type 1 char
             stringBuilder.append("00"); //paraLen  4      number
             stringBuilder.append("862785043595621"); //   number   Modem(phone ,기존) Number=> 15자리  =====> hex 로 바뀔거임...
-            stringBuilder.append("00"); //debug message,  number   변동사항 거의 있을수 있음. 2
+            stringBuilder.append("  "); //debug message,  number   변동사항 거의 있을수 있음. 2
 
 
             byte[] totalData = stringBuilder.toString().getBytes();
@@ -488,11 +546,6 @@ public class ClientSocket {
             }
         }
         return false;
-    }
-
-    public boolean dataProcess(boolean settingResult) {
-
-        return true;
     }
 
 

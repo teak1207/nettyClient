@@ -23,12 +23,6 @@ public class NonSslSocket {
 
             boolean preinstallResult = clientSocket.preinstallProcess();
 
-
-//            boolean settingResult = clientSocket.settingProcess(preinstallResult);
-//            boolean dataResult = clientSocket.dataProcess(settingResult);
-//            clientSocket.reportProcess(dataResult);
-
-
             if (preinstallResult) {
                 boolean settingResult = clientSocket.settingProcess(true);
                 if (settingResult) {
@@ -36,15 +30,14 @@ public class NonSslSocket {
 
                     if (reportResult) {
                         boolean requestResult = clientSocket.requestProcess(true);
+                        if (requestResult) {
+                            clientSocket.dataProcess(true);
+                        }
                     }
-
-
                 }
             }
             boolean requestResult;
 
-
-//            clientSocket.dataProcess();
         } catch (IOException e) {
             e.printStackTrace();
         }
