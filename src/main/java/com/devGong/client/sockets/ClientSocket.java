@@ -416,6 +416,7 @@ public class ClientSocket {
 
                 if (is.read(reply) < 0)
                     throw new SocketException();
+
                 // 넘겨 받은 값을 찍어줌
                 System.out.println(" [Receive preinstall INFO] : " + new String(reply));
                 System.out.println("=== [PreInstall_REPORT PROCESS START ] ===");
